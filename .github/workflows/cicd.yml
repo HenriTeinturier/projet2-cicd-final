@@ -12,9 +12,9 @@ jobs:
       matrix:
         include:
           - context_name: frontend
-            image_name: ghcr.io/henriteinturier/projet2-cicd-final/frontend:latest
+            image_name: ghcr.io/henriteinturier/projet2-cicd-final/frontend
           - context_name: node-api
-            image_name: ghcr.io/henriteinturier/projet2-cicd-final/node-api:latest
+            image_name: ghcr.io/henriteinturier/projet2-cicd-final/node-api
     permissions:
       packages: write
     steps:
@@ -40,6 +40,6 @@ jobs:
         with:
           context: ./${{ matrix.context_name  }}
           push: true
-          tags: ${{ matrix.image_name }}
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,name=cache
