@@ -40,6 +40,6 @@ jobs:
         with:
           context: ./${{ matrix.context_name  }}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ matrix.image_name }}
           cache-from: type=gha
           cache-to: type=gha,name=cache
