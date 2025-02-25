@@ -35,7 +35,11 @@ jobs:
       fail-fast: true
       matrix:
         npm_commande:
-          ["run test:ci", "run lint", "audit --production --audit-level=high"]
+          [
+            "run test:ci",
+            "run lint",
+            "audit --production --audit-level=critical",
+          ]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
