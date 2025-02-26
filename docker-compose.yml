@@ -2,12 +2,8 @@ version: "3.9"
 services:
   node-api:
     image: ghcr.io/henriteinturier/projet2-cicd-final/node-api:main
-    ports:
-      - "3000:80"
   frontend:
     image: ghcr.io/henriteinturier/projet2-cicd-final/frontend:main
-    ports:
-      - "80:80"
   cypress:
     image: cypress/included
     working_dir: /e2e
