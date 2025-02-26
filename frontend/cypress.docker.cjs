@@ -1,10 +1,10 @@
-// Configuration Cypress pour Docker (CommonJS)
+// Configuration Cypress pour CommonJS
 /* eslint-disable */
 
 const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
   e2e: {
-    baseUrl: 'http://frontend'
+    baseUrl: 'http://localhost:4173'
   }
 });
