@@ -93,5 +93,5 @@ jobs:
           context: ./${{ matrix.context_name  }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,name=${{ matrix.context_name }}-cache
+          cache-from: type=gha,scope=${{ matrix.context_name }}
+          cache-to: type=gha,scope=${{ matrix.context_name }}
