@@ -94,4 +94,21 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
-          cache-to: type=gha,name=cache,mode=max,key=${{ github.ref_name }}
+          cache-to: type=gha,name=cache
+
+  tests-e2e:
+    needs: [build-frontend-and-api]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Lancement des tests e2e
+        run: docker compose up --exit-code-from cypress --abort-on-container-exit
+      - name: Fermeture conteneurs et volumes
+        run: docker compose down -v --remove-orphans

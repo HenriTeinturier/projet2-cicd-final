@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  node-api:
+    image: ghcr.io/henriteinturier/projet2-cicd-final/node-api:main
+    ports:
+      - "3000:80"
+  frontend:
+    image: ghcr.io/henriteinturier/projet2-cicd-final/frontend:main
+    ports:
+      - "80:80"
+  cypress:
+    image: cypress/included
+    working_dir: /e2e
+    volumes:
+      - ./frontend:/e2e
+    ## TODO/ a quoi ça sert de mettre cypress.config.js ? sachant que dedans si je suis le tuto il n'y a rien. Et si je prends celui de base la seul config c'est baseURL qui est différente de celle configurer juste avant dans le script
+    ## de plus je pense que cypress prend auto matiquement le cypress.config.js
+    entrypoint: cypress run --config baseUrl=http://frontend -- headless --browser chrome -C cypress.config.js
