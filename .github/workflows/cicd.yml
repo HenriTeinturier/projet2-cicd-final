@@ -141,12 +141,12 @@ jobs:
           # on crée le répertoire ~/.ssh s'il n'existe pas
           mkdir -p ~/.ssh
           # on ajoute la fingerprint du vps dans le fichier known_hosts
-          ssh-keyscan -H -p ${{env.SERVER_PRODUCTION_PORT}} ${{env.SERVER_PRODUCTION_IP}} >> ~/.ssh/known_hosts
+          ssh-keyscan -H -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_IP }} >> ~/.ssh/known_hosts
           # on copie le fichier docker-compose.production.yml sur le serveur de production
-          scp docker-compose.production.yml -P ${{env.SERVER_PRODUCTION_PORT}} ${{env.SERVER_PRODUCTION_USER}}@${{env.SERVER_PRODUCTION_IP}}:~/docker-compose.production.yml
+          scp -P ${{ env.SERVER_PRODUCTION_PORT }} docker-compose.production.yml ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }}:~/docker-compose.production.yml
           # on connecte docker du vps à github container registry (packages)
-          ssh -p ${{env.SERVER_PRODUCTION_PORT}} ${{env.SERVER_PRODUCTION_USER}}@${{env.SERVER_PRODUCTION_IP}} "docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN}}"
+          ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}"
           # on récupère les images
-          ssh -p ${{env.SERVER_PRODUCTION_PORT}} ${{env.SERVER_PRODUCTION_USER}}@${{env.SERVER_PRODUCTION_IP}} "docker compose -f ~/docker-compose.production.yml pull"
+          ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "docker compose -f ~/docker-compose.production.yml pull"
           # on démarre les conteneurs
-          ssh -p ${{env.SERVER_PRODUCTION_PORT}} ${{env.SERVER_PRODUCTION_USER}}@${{env.SERVER_PRODUCTION_IP}} "docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
+          ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
