@@ -7,13 +7,12 @@ services:
     deploy:
       replicas: 2
       update_config:
-        parallelism: 2
+        parallelism: 1
         delay: 10s
       restart_policy:
         condition: on-failure
   frontend:
     image: ghcr.io/henriteinturier/projet2-cicd-final/frontend:main
     ports:
-      - target: 80
-        published: 80
+      - 80:80
     restart: always
