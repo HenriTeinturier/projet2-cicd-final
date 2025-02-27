@@ -5,6 +5,10 @@ env:
   SERVER_PRODUCTION_USER: ubuntu
   SERVER_PRODUCTION_PORT: 2222
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
