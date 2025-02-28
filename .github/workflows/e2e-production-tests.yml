@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production-tests
-      url: http://${{ env.SERVER_PRODUCTION_IP }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,4 +26,4 @@ jobs:
       - name: Pull Cypress image
         run: docker pull cypress/included:latest
       - name: Lancement des tests e2e
-        run: docker run --rm -v ${{ github.workspace }}/frontend:/e2e -w /e2e cypress/included:latest cypress run --config baseUrl=${{ env.SERVER_PRODUCTION_IP }} --headless --browser chrome
+        run: docker run --rm -v ${{ github.workspace }}/frontend:/e2e -w /e2e cypress/included:latest cypress run --config baseUrl=http://${{ env.SERVER_PRODUCTION_IP }} --headless --browser chrome
