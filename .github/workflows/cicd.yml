@@ -191,5 +191,3 @@ jobs:
   tests-e2e-production:
     needs: [deploy-production]
     uses: ./.github/workflows/e2e-production-tests.yml
-    secrets:
-      SERVER_PRODUCTION_IP: ${{ secrets.SERVER_PRODUCTION_IP }}
