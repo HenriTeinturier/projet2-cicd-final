@@ -1,10 +1,10 @@
 name: e2e-production-tests
 
-env:
-  SERVER_PRODUCTION_IP: ${{ secrets.SERVER_PRODUCTION_IP }}
-
 on:
   workflow_call:
+    secrets:
+      SERVER_PRODUCTION_IP:
+        required: true
 
 jobs:
   e2e-tests:
@@ -26,4 +26,4 @@ jobs:
       - name: Pull Cypress image
         run: docker pull cypress/included:latest
       - name: Lancement des tests e2e
-        run: docker run --rm -v ${{ github.workspace }}/frontend:/e2e -w /e2e cypress/included:latest cypress run --config baseUrl=http://${{ env.SERVER_PRODUCTION_IP }} --headless --browser chrome
+        run: docker run --rm -v ${{ github.workspace }}/frontend:/e2e -w /e2e cypress/included:latest cypress run --config baseUrl=http://${{ secrets.SERVER_PRODUCTION_IP }} --headless --browser chrome
