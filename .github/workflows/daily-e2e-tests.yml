@@ -1,0 +1,29 @@
+name: Daily E2E Tests
+
+on:
+  schedule:
+    # Les temps sont toujours en UTC (Coordinated Universal Time)
+    # '0 17 * * *' = 17h UTC
+    # Pour la France :
+    #   - En hiver (UTC+1) : 17h UTC = 18h en France
+    #   - En été (UTC+2) : 17h UTC = 19h en France
+    #
+    # Format: '* * * * *'
+    #          │ │ │ │ │
+    #          │ │ │ │ └─ Jour de la semaine (0-6, 0=Dimanche)
+    #          │ │ │ └─── Mois (1-12)
+    #          │ │ └───── Jour du mois (1-31)
+    #          │ └─────── Heure (0-23)
+    #          └───────── Minute (0-59)
+    - cron: "0 17 * * *" # Tous les jours à 17h00 UTC
+
+  # Permet de déclencher manuellement le workflow depuis l'interface GitHub
+  # Utile pour :
+  #   - Tester le workflow sans attendre le schedule
+  #   - Lancer des tests supplémentaires si nécessaire
+  #   - Débugger le workflow
+  workflow_dispatch:
+
+jobs:
+  daily-tests:
+    uses: ./.github/workflows/e2e-production-tests.yml
