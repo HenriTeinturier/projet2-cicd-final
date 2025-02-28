@@ -4,6 +4,9 @@ env:
   SERVER_PRODUCTION_IP: 13.51.156.206
   SERVER_PRODUCTION_USER: ubuntu
   SERVER_PRODUCTION_PORT: 2222
+  SERVER_STAGING_IP: 51.20.2.176
+  SERVER_STAGING_USER: ubuntu
+  SERVER_STAGING_PORT: 2222
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -122,8 +125,38 @@ jobs:
       - name: Fermeture conteneurs et volumes
         run: docker compose down -v --remove-orphans
 
-  deploy-production:
+  deploy-staging:
     needs: [tests-e2e]
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: http://${{ env.SERVER_STAGING_IP }}
+    steps:
+      # besoin du checkout pour récupérer le fichier docker-compose.production.yml
+      # d'ailleurs il faut créer le fichier docker-compose.production.yml dans le repo On peut le faire de suite avant de finir
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: deployer sur le serveur de staging
+        run: |
+          # on active l'agent ssh
+          eval $(ssh-agent -s)
+          # on ajoute la clé ssh dans l'agent ssh
+          ssh-add - <<< "${{ secrets.VPS_KEY }}"
+          # on crée le répertoire ~/.ssh s'il n'existe pas
+          mkdir -p ~/.ssh
+          # on ajoute la fingerprint du vps dans le fichier known_hosts
+          ssh-keyscan -H -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_IP }} >> ~/.ssh/known_hosts
+          # on copie le fichier docker-compose.production.yml sur le serveur de production
+          scp -P ${{ env.SERVER_STAGING_PORT }} docker-compose.production.yml ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }}:~/docker-compose.production.yml
+          # on connecte docker du vps à github container registry (packages)
+          ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}"
+          # on récupère les images
+          ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker compose -f ~/docker-compose.production.yml pull"
+          # on démarre les conteneurs
+          ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
+
+  deploy-production:
+    needs: [deploy-staging]
     runs-on: ubuntu-latest
     # on fait ce job que si on est sur branch main
     if: github.ref == 'refs/heads/main'
