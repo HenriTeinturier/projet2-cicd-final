@@ -25,8 +25,8 @@ runs:
         eval $(ssh-agent -s)
         ssh-add - <<< "${{ inputs.VPS_KEY }}"
         mkdir -p ~/.ssh
-        ssh-keyscan -H -p ${{ inputs.SSH_PORT }} ${{ inputs.SERVER_IP: }} >> ~/.ssh/known_hosts
-        scp -P ${{ inputs.SSH_PORT }} docker-compose.production.yml ${{ inputs.USER_VPS }}@${{ inputs.SERVER_IP: }}:~/docker-compose.production.yml
-        ssh -p ${{ inputs.SSH_PORT }} ${{ inputs.USER_VPS }}@${{ inputs.SERVER_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ inputs.GITHUB_TOKEN: }}"
+        ssh-keyscan -H -p ${{ inputs.SSH_PORT }} ${{ inputs.SERVER_IP }} >> ~/.ssh/known_hosts
+        scp -P ${{ inputs.SSH_PORT }} docker-compose.production.yml ${{ inputs.USER_VPS }}@${{ inputs.SERVER_IP }}:~/docker-compose.production.yml
+        ssh -p ${{ inputs.SSH_PORT }} ${{ inputs.USER_VPS }}@${{ inputs.SERVER_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ inputs.GITHUB_TOKEN }}"
         ssh -p ${{ inputs.SSH_PORT }} ${{ inputs.USER_VPS }}@${{ inputs.SERVER_IP }} "sudo docker compose -f ~/docker-compose.production.yml pull"
         ssh -p ${{ inputs.SSH_PORT }} ${{ inputs.USER_VPS }}@${{ inputs.SERVER_IP }} "sudo docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
