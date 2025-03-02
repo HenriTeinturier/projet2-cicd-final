@@ -137,23 +137,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: deployer sur le serveur de staging
-        run: |
-          # on active l'agent ssh
-          eval $(ssh-agent -s)
-          # on ajoute la clé ssh dans l'agent ssh
-          ssh-add - <<< "${{ secrets.VPS_KEY }}"
-          # on crée le répertoire ~/.ssh s'il n'existe pas
-          mkdir -p ~/.ssh
-          # on ajoute la fingerprint du vps dans le fichier known_hosts
-          ssh-keyscan -H -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_IP }} >> ~/.ssh/known_hosts
-          # on copie le fichier docker-compose.production.yml sur le serveur de production
-          scp -P ${{ env.SERVER_STAGING_PORT }} docker-compose.production.yml ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }}:~/docker-compose.production.yml
-          # on connecte docker du vps à github container registry (packages)
-          ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}"
-          # on récupère les images
-          ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker compose -f ~/docker-compose.production.yml pull"
-          # on démarre les conteneurs
-          ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
+        uses: ./.github/actions/deploy
+        with:
+          VPS_KEY: ${{ secrets.VPS_KEY }}
+          SSH_PORT: ${{ env.SERVER_STAGING_PORT }}
+          USER_VPS: ${{ env.SERVER_STAGING_USER }}
+          SERVER_IP: ${{ env.SERVER_STAGING_IP }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy-production:
     needs: [deploy-staging]
@@ -170,24 +160,77 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: deployer sur le serveur de production
-        run: |
-          # on active l'agent ssh
-          eval $(ssh-agent -s)
-          # on ajoute la clé ssh dans l'agent ssh
-          ssh-add - <<< "${{ secrets.VPS_KEY }}"
-          # on crée le répertoire ~/.ssh s'il n'existe pas
-          mkdir -p ~/.ssh
-          # on ajoute la fingerprint du vps dans le fichier known_hosts
-          ssh-keyscan -H -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_IP }} >> ~/.ssh/known_hosts
-          # on copie le fichier docker-compose.production.yml sur le serveur de production
-          scp -P ${{ env.SERVER_PRODUCTION_PORT }} docker-compose.production.yml ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }}:~/docker-compose.production.yml
-          # on connecte docker du vps à github container registry (packages)
-          ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}"
-          # on récupère les images
-          ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "sudo docker compose -f ~/docker-compose.production.yml pull"
-          # on démarre les conteneurs
-          ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "sudo docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
+        uses: ./.github/actions/deploy
+        with:
+          VPS_KEY: ${{ secrets.VPS_KEY }}
+          SSH_PORT: ${{ env.SERVER_PRODUCTION_PORT }}
+          USER_VPS: ${{ env.SERVER_PRODUCTION_USER }}
+          SERVER_IP: ${{ env.SERVER_PRODUCTION_IP }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   tests-e2e-production:
     needs: [deploy-production]
     uses: ./.github/workflows/e2e-production-tests.yml
+# Archive deploye without personalized action
+# deploy-staging:
+#   needs: [tests-e2e]
+#   runs-on: ubuntu-latest
+#   environment:
+#     name: staging
+#     url: http://${{ env.SERVER_STAGING_IP }}
+#   steps:
+#     # besoin du checkout pour récupérer le fichier docker-compose.production.yml
+#     # d'ailleurs il faut créer le fichier docker-compose.production.yml dans le repo On peut le faire de suite avant de finir
+#     - name: Checkout
+#       uses: actions/checkout@v4
+#     - name: deployer sur le serveur de staging
+#       run: |
+#         # on active l'agent ssh
+#         eval $(ssh-agent -s)
+#         # on ajoute la clé ssh dans l'agent ssh
+#         ssh-add - <<< "${{ secrets.VPS_KEY }}"
+#         # on crée le répertoire ~/.ssh s'il n'existe pas
+#         mkdir -p ~/.ssh
+#         # on ajoute la fingerprint du vps dans le fichier known_hosts
+#         ssh-keyscan -H -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_IP }} >> ~/.ssh/known_hosts
+#         # on copie le fichier docker-compose.production.yml sur le serveur de production
+#         scp -P ${{ env.SERVER_STAGING_PORT }} docker-compose.production.yml ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }}:~/docker-compose.production.yml
+#         # on connecte docker du vps à github container registry (packages)
+#         ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}"
+#         # on récupère les images
+#         ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker compose -f ~/docker-compose.production.yml pull"
+#         # on démarre les conteneurs
+#         ssh -p ${{ env.SERVER_STAGING_PORT }} ${{ env.SERVER_STAGING_USER }}@${{ env.SERVER_STAGING_IP }} "sudo docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
+
+# deploy-production:
+#   needs: [deploy-staging]
+#   runs-on: ubuntu-latest
+#   # on fait ce job que si on est sur branch main
+#   if: github.ref == 'refs/heads/main'
+#   # on ajoute les variables d'environnement
+#   environment:
+#     name: production
+#     url: http://${{ env.SERVER_PRODUCTION_IP }}
+#   steps:
+#     # besoin du checkout pour récupérer le fichier docker-compose.production.yml
+#     # d'ailleurs il faut créer le fichier docker-compose.production.yml dans le repo On peut le faire de suite avant de finir
+#     - name: Checkout
+#       uses: actions/checkout@v4
+#     - name: deployer sur le serveur de production
+#       run: |
+#         # on active l'agent ssh
+#         eval $(ssh-agent -s)
+#         # on ajoute la clé ssh dans l'agent ssh
+#         ssh-add - <<< "${{ secrets.VPS_KEY }}"
+#         # on crée le répertoire ~/.ssh s'il n'existe pas
+#         mkdir -p ~/.ssh
+#         # on ajoute la fingerprint du vps dans le fichier known_hosts
+#         ssh-keyscan -H -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_IP }} >> ~/.ssh/known_hosts
+#         # on copie le fichier docker-compose.production.yml sur le serveur de production
+#         scp -P ${{ env.SERVER_PRODUCTION_PORT }} docker-compose.production.yml ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }}:~/docker-compose.production.yml
+#         # on connecte docker du vps à github container registry (packages)
+#         ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "sudo docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}"
+#         # on récupère les images
+#         ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "sudo docker compose -f ~/docker-compose.production.yml pull"
+#         # on démarre les conteneurs
+#         ssh -p ${{ env.SERVER_PRODUCTION_PORT }} ${{ env.SERVER_PRODUCTION_USER }}@${{ env.SERVER_PRODUCTION_IP }} "sudo docker compose -f ~/docker-compose.production.yml up -d --force-recreate"
