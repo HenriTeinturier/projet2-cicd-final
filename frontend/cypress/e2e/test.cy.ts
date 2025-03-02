@@ -4,7 +4,7 @@ describe('Vue 3 App', () => {
   });
 
   it("Visite la page d'accueil", () => {
-    cy.contains('h1', 'Home');
+    cy.contains('h1', 'Bienvenue');
   });
 
   it('Visite la page de login', () => {
