@@ -10,7 +10,7 @@ on:
       - develop
 
 jobs:
-  tests-frontend:
+  develop-tests-frontend:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -30,7 +30,7 @@ jobs:
       - name: npm audit
         run: npm audit --production --audit-level=high
 
-  tests-node-api:
+  develop-tests-node-api:
     runs-on: ubuntu-latest
     defaults:
       run:
